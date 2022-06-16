@@ -19,7 +19,7 @@ import main
 
 data_on_queue_for_GUI = queue.Queue()
 
-client_thread = threading.Thread(target = client.main)
+client_thread = threading.Thread(target = client.open_client_socket)
 
 class DataThread(QObject):
     progress = pyqtSignal()
@@ -135,10 +135,10 @@ class MainWindow(QMainWindow):
         filter_line.addWidget(self.filter_pane, 0, 3, 1, 1)
         main_layout.addLayout(filter_line)
         
-        next_line = QHBoxLayout()
+        next_line = QGridLayout()
         #Execution Tag
         self.status = QLabel()
-        next_line.addWidget(self.status)
+        next_line.addWidget(self.status, 0, 0)
 
         '''
         #Number_of_L4s
@@ -151,9 +151,10 @@ class MainWindow(QMainWindow):
 
         #Filter checkbox for the status_get command
         self.status_get_command_checkbox = QCheckBox()
-        self.status_get_command_checkbox.setText("See Status-get Commands")
-        #self.status_get_command_checkbox.stateChanged.connect(self.filter_command)
-        next_line.addWidget(self.status_get_command_checkbox)
+        self.status_get_command_checkbox.setText("Hide Status-Get Command")
+        self.status_get_command_checkbox.stateChanged.connect(self.filter_command)
+        #self.status_get_command_checkbox.setAlignment(Qt.Right)
+        next_line.addWidget(self.status_get_command_checkbox, 0, 3)
         main_layout.addLayout(next_line)
 
         self.filtered_data = pd.DataFrame()
@@ -209,10 +210,11 @@ class MainWindow(QMainWindow):
     '''
 
     def closeEvent(self, event):
-        client.close_connection()
+        #client.close_connection()
         self.close()
-        main.close_session()
         event.accept()
+        main.close_session()
+        
 
     '''
     def number_of_L4_changed(self):
@@ -224,48 +226,49 @@ class MainWindow(QMainWindow):
         while not data_on_queue_for_GUI.empty():
             data = self.data
             TDM_data = data_on_queue_for_GUI.get()
-            
-            #check if we have a status from our recieving end
-            if TDM_data[0][-2] != '--':
-                self.completed_execution = True
-            
-            #concat with original dataframe
-            data_from_queue = pd.DataFrame([TDM_data[0][:-1]], columns = self.column_names[1:])
-            time_dataframe = pd.DataFrame([[str(time.time()-self.time)[:5] + " seconds"]], columns = ['Time'])
-            data_to_add = pd.concat([time_dataframe, data_from_queue], axis = 1)
-            self.data = pd.concat([data, data_to_add])
-            self.data = self.data.reindex(columns = self.column_names)
+            if TDM_data != []:
 
-            #store explanations
-            self.create_and_store_explanations(data_to_add)
-
-            #byte code from the queue
-            self.list_byte_code_text.append(TDM_data[0][-1])
-            
-            #add buffer once we have recieved a status
-            if self.completed_execution:
-                self.add_buffer()
+                #check if we have a status from our recieving end
+                if TDM_data[0][-2] != '--':
+                    self.completed_execution = True
                 
-            #once we started data collection update them
-            if self.start_data_collection:
-                '''
-                if self.status_get_command_checkbox.isChecked():
-                    #self.datatable.clear()
-                    self.filter_command()
-                else:
-                    #self.datatable.clear()
+                #concat with original dataframe
+                data_from_queue = pd.DataFrame([TDM_data[0][:-1]], columns = self.column_names[1:])
+                time_dataframe = pd.DataFrame([[str(time.time()-self.time)[:5] + " seconds"]], columns = ['Time'])
+                data_to_add = pd.concat([time_dataframe, data_from_queue], axis = 1)
+                self.data = pd.concat([data, data_to_add])
+                self.data = self.data.reindex(columns = self.column_names)
+
+                #store explanations
+                self.create_and_store_explanations(data_to_add)
+
+                #byte code from the queue
+                self.list_byte_code_text.append(TDM_data[0][-1])
+                
+                #add buffer once we have recieved a status
+                if self.completed_execution:
+                    self.add_buffer()
+                    
+                #once we started data collection update them
+                if self.start_data_collection:
+                    '''
+                    if self.status_get_command_checkbox.isChecked():
+                        #self.datatable.clear()
+                        self.filter_command()
+                    else:
+                        #self.datatable.clear()
+                        self.update_datatable()
+                    '''
                     self.update_datatable()
-                '''
-                self.update_datatable()
 
         self.completed_execution = False
    
     
     def filter_command(self):
         if self.status_get_command_checkbox.isChecked():
-            client.Recieve_Status_Get_Commands = True 
+            client.Hide_Status_Get_Commands = True 
         else: 
-            client.Recieve_Status_Get_Commands = False
+            client.Hide_Status_Get_Commands = False
         '''
         #if self.status_get_command_checkbox.isChecked():
         keep_rows = self.data.index[self.data['Status'] != "COMMAND_status_get"]

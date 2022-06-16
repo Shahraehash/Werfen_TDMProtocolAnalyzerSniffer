@@ -1,13 +1,16 @@
 
 from TDMDecoder import *
-import pandas as pd
-import numpy as np
 import queue
+
 
 data_queue = queue.Queue()
 
+terminate_thread = False
+
+number_of_L4s = 7
+
 def TDM_Analyzer(commandsent):
-    number_of_L4s = 7
+    print(number_of_L4s)
     ser = serial.Serial(
         port = serial_port_device,
         baudrate = serial_baud_rate,
@@ -36,7 +39,8 @@ def TDM_Analyzer(commandsent):
 
         decoder.is_host_frame_empty(this_host_frame, number_of_L4s)
         decoder.is_nodes_frame_empty(this_node_frame, number_of_L4s)
-
+        
+        
         if not (decoder.node_frame_empty and decoder.host_frame_empty):
             
             final_output_array = []
@@ -50,6 +54,8 @@ def TDM_Analyzer(commandsent):
                         final_output_array.append(decoder.array_node_frame_decoding(this_node_frame[node], node, number_of_L4s, commandsent))
             if len(final_output_array) > 0:
                 data_queue.put(final_output_array)
+        if terminate_thread:
+            break
 
 
 def getData():

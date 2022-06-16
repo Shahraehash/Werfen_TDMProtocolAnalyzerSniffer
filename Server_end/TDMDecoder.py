@@ -86,14 +86,17 @@ class TDMDecoder:
         start_time = time.time()
         self.sync_state = "OUT_OF_SYNC"
         while idle_timeout == -1 or start_time + idle_timeout > time.time():
-            ch = self.serial.read()
-            if ch == b'': continue
-            if ch[0] == self.signature_byte_0: 
+            try:
                 ch = self.serial.read()
                 if ch == b'': continue
-                if ch[0] == self.signature_byte_1: 
-                    self.sync_state = "IN_SYNC"
-                    break
+                if ch[0] == self.signature_byte_0: 
+                    ch = self.serial.read()
+                    if ch == b'': continue
+                    if ch[0] == self.signature_byte_1: 
+                        self.sync_state = "IN_SYNC"
+                        break
+            except:
+                break
         
         if self.sync_state != "IN_SYNC":
             #if debug: print(str(idle_timeout) + " second timeout exceeded while searching for host frame")
@@ -109,7 +112,8 @@ class TDMDecoder:
    
             #if debug: print(f"{ch[0]:02X} ", end='')
             self.host_frame.append(ch[0])
-            
+        
+        #print("host frame", self.host_frame)
         #if debug: print(time.time())
         return(1)
         
@@ -126,22 +130,26 @@ class TDMDecoder:
         search_start_time = time.time()
         #if debug: print("Capturing Node Frame [" + str(node) + "] at " + f"{search_start_time:.5f}" + ": ", end='')
         for i in range(self.node_frame_length):
-            ch = self.serial.read()
-            
-            if i == 0 and time.time() > search_start_time + node_timeout:
-                #if debug: print("No node responded as of " + f"{time.time():.5f}")
-                self.node_frame = [0] * self.node_frame_length
-                return(1) 
+            try: 
+                ch = self.serial.read()
                 
-            if ch == b'':
-                if time.time() > search_start_time + node_timeout:
+                if i == 0 and time.time() > search_start_time + node_timeout:
                     #if debug: print("No node responded as of " + f"{time.time():.5f}")
                     self.node_frame = [0] * self.node_frame_length
                     return(1) 
+                    
+                if ch == b'':
+                    if time.time() > search_start_time + node_timeout:
+                        #if debug: print("No node responded as of " + f"{time.time():.5f}")
+                        self.node_frame = [0] * self.node_frame_length
+                        return(1) 
+                    continue
+            except:
                 continue
             
             self.node_frame.append(ch[0])
-           
+        
+        #print("node frame", self.node_frame)
         #if debug: print("")
         return(1)
         
@@ -274,6 +282,8 @@ class TDMDecoder:
                 byte_code_list += [byte_elem]
             
             output_node_list.append(byte_code_list)
+            
+        
             
             return output_node_list
         else:
