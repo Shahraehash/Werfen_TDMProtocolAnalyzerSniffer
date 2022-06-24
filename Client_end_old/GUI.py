@@ -3,9 +3,14 @@ from PyQt5.QtWidgets import (QAction, QCheckBox, QComboBox, QFileDialog, QGridLa
 from PyQt5.QtGui import QFont
 import pandas as pd
 import numpy as np
-import queue, os, threading, time
+import threading, queue, os, time
 
-import CustomProxyModel, global_variables, main, PandasModel, recieving_client, sending_client, TableView
+import global_variables
+import client
+import PandasModel
+import CustomProxyModel
+import TableView
+import main
 
 
 data_on_queue_for_GUI = queue.Queue()
@@ -19,17 +24,14 @@ class DataThread(QObject):
         self.version_of_board = version_of_board
 
     def get_data(self):
-        HOST = global_variables.HOST
-
-        print("Starting Clients...")
-        sending_client_thread = threading.Thread(target = sending_client.main, args = (HOST, self.version_of_board, self.number_of_L4s))
-        sending_client_thread.start()
-
-        recieving_client_thread = threading.Thread(target = recieving_client.main, args = (HOST,))
-        recieving_client_thread.start()
+        #create client and server threads
+        #server_thread = threading.Thread(target = server.main)
+        #server_thread.start()
+        client_thread = threading.Thread(target = client.open_client_socket, args = (self.number_of_L4s, self.version_of_board))
+        client_thread.start()
         while True:
             #once we put data on a queue send the emit signal to connect with on the UI side 
-            clientelem = recieving_client.get_data()
+            clientelem = client.get_data()
             data_on_queue_for_GUI.put(clientelem)
             self.progress.emit()
             time.sleep(0.05)
@@ -160,10 +162,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(w)
 
     def closeEvent(self, event):
-        global_variables.Close_Session = True
+        global_variables.message = "closing"
         self.close()
         event.accept()
-        #main.close_session()
+        time.sleep(1)
+        main.close_session()
 
     def get_data(self):
         #get data from queue

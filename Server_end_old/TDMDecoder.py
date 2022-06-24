@@ -6,6 +6,7 @@ from TDMconstants import L4_DEVICE_IDS
 from TDMconstants import L4_COMMAND_CODES
 from TDMconstants import L4_STATUS_CODES
 
+
 serial_port_device='/dev/ttyS0'
 serial_baud_rate=921600
 serial_timeout=0.000015 # slightly longer than the length of a 921600 byte
@@ -174,7 +175,6 @@ class TDMDecoder:
         #DeviceID
         devID_decoded = ""
         try:
-            #print(frame[running_host_node_offset])
             devID_decoded = L4_DEVICE_IDS(frame[running_host_node_offset]).name
         except:
             devID_decoded = "--"
@@ -184,7 +184,6 @@ class TDMDecoder:
         #Commands
         cmd_decoded = ""
         try:
-            #print(frame, frame[running_host_node_offset], str(L4_COMMAND_CODES(frame[running_host_node_offset]).name))
             cmd_decoded = str(L4_COMMAND_CODES(frame[running_host_node_offset]).name)
         except:
             cmd_decoded = "--"
@@ -210,14 +209,11 @@ class TDMDecoder:
         #Byte-Code
         byte_code_list = []
         for elem in frame:
-            #byte_elem = elem.to_bytes(1, 'little')
-            #print(elem, hex(elem), byte_elem)
-            byte_code_list += ["0x{:02x}".format(elem)]
+            byte_elem = elem.to_bytes(4, 'little')
+            byte_code_list += [byte_elem]
         
         output_list.append(byte_code_list)
         
-        
-        #print("host frame", self.serial.read(), output_list, "\n")
         return output_list, ([str(node_commandsentto)], devID_decoded, cmd_decoded)
 
    
@@ -282,12 +278,13 @@ class TDMDecoder:
             #Byte-Code
             byte_code_list = []
             for elem in frame:
-                #byte_elem = elem.to_bytes(1, 'little')
-                byte_code_list += ["0x{:02x}".format(elem)]
+                byte_elem = elem.to_bytes(4, 'little')
+                byte_code_list += [byte_elem]
             
             output_node_list.append(byte_code_list)
             
-            #print("node", self.serial.read(), output_node_list, "\n\n")
+        
+            
             return output_node_list
         else:
             return
