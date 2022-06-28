@@ -195,7 +195,7 @@ class TDMDecoder:
         output_list.append("--")
         
         #Additional Arguments
-        '''
+        
         arguments_decoded = ""
         for arg in range(self.number_of_args):
             args_decoded = "arg[" + str(arg) + "]: "
@@ -205,7 +205,7 @@ class TDMDecoder:
                 running_host_node_offset += 1
             arguments_decoded = "".join([arguments_decoded, args_decoded, f"{this_arg:08X} "])
         output_list.append(arguments_decoded)
-        '''
+        
         
         #Byte-Code
         byte_code_list = []
@@ -267,7 +267,7 @@ class TDMDecoder:
             running_node_offset += self.status_length
             
             #Arguments
-            '''
+            
             arguments_decoded = ""
             for data in range(self.number_of_data):
                 node_frame_decoded = "arg[" + str(data) + "]: "
@@ -277,7 +277,7 @@ class TDMDecoder:
                     running_node_offset += 1
                 arguments_decoded = "".join([arguments_decoded, node_frame_decoded, f"{this_data:08X} "])
             output_node_list.append(arguments_decoded)
-            '''
+            
             
             #Byte-Code
             byte_code_list = []

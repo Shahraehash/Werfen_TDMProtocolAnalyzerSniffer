@@ -60,6 +60,7 @@ def TDM_Analyzer(commandsent):
                 else:
                     data_queue.put(final_output_array)
         if global_vars.close_session:
+            data_queue.put("closed_session")
             break
 
 

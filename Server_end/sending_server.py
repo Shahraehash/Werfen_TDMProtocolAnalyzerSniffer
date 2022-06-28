@@ -2,7 +2,6 @@ import pickle, socket, threading
 
 import global_vars, TDMprotocolAnalyzer_faster
 
-
 PORT = 65432
 
 def main(HOST):
@@ -17,20 +16,22 @@ def main(HOST):
     TDMprotocol_thread.start()
     
     while True:
-        if global_vars.close_session:
-            TDMprotocolAnalyzer_faster.empty_queue()
-            conn.close()
-            print("closed the sending server connection")
-            break
-        else:
-            raw_TDM_data = TDMprotocolAnalyzer_faster.getData()
+        raw_TDM_data = TDMprotocolAnalyzer_faster.getData()
+        if raw_TDM_data != 'closed_session':
             for elem in raw_TDM_data:
                 TDM_data_to_send = pickle.dumps([elem])
                 try:            
-                    conn.send(TDM_data_to_send)
+                    conn.send(len(TDM_data_to_send).to_bytes(2,'big') + TDM_data_to_send) 
                     print("data sent", len(TDM_data_to_send))
                     time.sleep(0.1)
                 except:
                     break
+        else:
+            TDMprotocolAnalyzer_faster.empty_queue()
+            closed_session_msg = pickle.dumps(raw_TDM_data)
+            conn.send(len(closed_session_msg).to_bytes(2,'big') + closed_session_msg)
+            conn.close()
+            print("closed the sending server connection")
+            break
+
         
-    

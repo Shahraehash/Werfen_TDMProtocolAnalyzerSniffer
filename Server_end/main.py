@@ -14,22 +14,3 @@ def main():
     sending_data_server_thread.start()
 
 main()
-
-
-
-'''
-def main():
-    if not global_vars.close_session:
-        thread_control.main()
-        while True:
-            if global_vars.close_session:
-                print("Disconnected")
-                break
-    
-    print("Reconnecting...")
-    time.sleep(10)
-    main()
-            
-    
-main()
-'''

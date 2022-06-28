@@ -5,14 +5,14 @@ import global_vars
 PORT = 65433
 
 def main(HOST):
-    sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sending_socket.bind((HOST,PORT))
+    recieving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    recieving_socket.bind((HOST,PORT))
     print("connected to the sending client")
-    sending_socket.listen()
-    conn, addr = sending_socket.accept()
+    recieving_socket.listen()
+    conn, addr = recieving_socket.accept()
     while True:
         data = conn.recv(122)
-        print(data)
+        #print(data)
         if data == b'':
             global_vars.close_session = True
             conn.close()

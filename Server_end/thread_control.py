@@ -12,4 +12,3 @@ def main():
     
     sending_data_server_thread = threading.Thread(target = sending_server.main, args = (HOST,))
     sending_data_server_thread.start()
-
