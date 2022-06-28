@@ -12,6 +12,7 @@ def main(HOST, version_of_board, number_of_L4s):
     print("sending client is connected to Raspberry Pi")
     
     while True:
+        #print(global_variables.Close_Session)
         if global_variables.Close_Session:
             sending_socket.close()
             print("closing the sending client connection")

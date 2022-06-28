@@ -39,8 +39,8 @@ class MainWindow(QMainWindow):
     
     def __init__(self, version_of_board, number_of_L4s):
         super().__init__()
-        self.width = 1000
-        self.height = 800
+        self.width = 1500
+        self.height = 1000
         self.setFixedWidth(self.width)
         self.setFixedHeight(self.height)
 
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         if self.version_of_board.lower() == "p1b":
             print("p1b")
         '''
-        self.column_names = ['Time', 'Source', 'Destination', 'Device', 'Command', 'Status']
+        self.column_names = ['Time', 'Source', 'Destination', 'Device', 'Command', 'Status', 'Arguments']
         self.dictionary_data = dict()
         for elem in self.column_names:
             self.dictionary_data[elem] = ['']
@@ -150,7 +150,7 @@ class MainWindow(QMainWindow):
         #Byte Code 
         self.byte_code = QLabel()
         #self.byte_code.setAlignment(Qt.AlignCenter)
-        self.list_byte_code_text = ['--']
+        self.list_byte_code_text = []
         self.byte_code.setStyleSheet("border: 1px solid black;")
         main_layout.addWidget(self.byte_code)
         
@@ -269,6 +269,10 @@ class MainWindow(QMainWindow):
             self.data = pd.concat([time_dataframe, data_table], axis = 1)
             self.data = self.data.reindex(columns = self.column_names)
         
+        #add initial entry
+        self.list_of_explanations += [""]
+        self.list_byte_code_text += ["--"]
+
         
         df_as_pandas_model = PandasModel.PandasModel(self.data)
         self.model = df_as_pandas_model
@@ -276,9 +280,6 @@ class MainWindow(QMainWindow):
         self.proxy.setSourceModel(self.model)
         #self.proxy.setFilterKeyColumn(1)
         self.datatable.setModel(self.proxy)
-
-        #add initial entry
-        self.list_of_explanations += ['']
 
     def update_datatable(self):
         df_as_pandas_model = PandasModel.PandasModel(self.data)
