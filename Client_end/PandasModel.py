@@ -23,9 +23,9 @@ class PandasModel(QtCore.QAbstractTableModel):
                 value = str(self._data.Status.values.tolist()[index.row()])
                 #color code according to the status 
                 if value == '':
-                    return QtGui.QColor('lightgray')
-                if value == '--':
                     return QtGui.QColor('silver')
+                if value == '--':
+                    return QtGui.QColor('darkgray')
                 if value == 'STATUS_Success':
                     return QtGui.QColor('lightgreen')
                 if value[:11] == 'STATUS_Error':

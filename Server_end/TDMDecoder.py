@@ -6,7 +6,6 @@ from TDMconstants import L4_DEVICE_IDS
 from TDMconstants import L4_COMMAND_CODES
 from TDMconstants import L4_STATUS_CODES
 
-
 serial_port_device='/dev/ttyS0'
 serial_baud_rate=921600
 serial_timeout=0.000015 # slightly longer than the length of a 921600 byte
@@ -78,11 +77,6 @@ class TDMDecoder:
     # once found, collect the requisite number of bytes comprising the entire host frame
     # return a list of integers representing the host frame
     def capture_host_frame(self):
-        #if self.sync_state != "OUT_OF_SYNC":
-        #    if debug: print("Tried to sync while we're already in sync")
-        #    return(-1)
-            
-        #if debug: print("Looking for start of Host Frame...")
         start_time = time.time()
         self.sync_state = "OUT_OF_SYNC"
         while idle_timeout == -1 or start_time + idle_timeout > time.time():
@@ -99,10 +93,7 @@ class TDMDecoder:
                 break
         
         if self.sync_state != "IN_SYNC":
-            #if debug: print(str(idle_timeout) + " second timeout exceeded while searching for host frame")
             return(-1)
-        
-        #if debug: print("\nCapturing Host Frame: " + f"{self.signature_byte_0:02X} {self.signature_byte_1:02X} ", end='')
         
         self.host_frame = [self.signature_byte_0, self.signature_byte_1]
         host_frame = []
@@ -110,11 +101,8 @@ class TDMDecoder:
             ch = self.serial.read()
             if ch == b'': continue
    
-            #if debug: print(f"{ch[0]:02X} ", end='')
             self.host_frame.append(ch[0])
-        
-        #print("host frame", self.host_frame)
-        #if debug: print(time.time())
+
         return(1)
         
         
@@ -122,25 +110,21 @@ class TDMDecoder:
     # return a list of integers representing the host frame
     def capture_node_frame(self, node):
         if self.sync_state == "OUT_OF_SYNC":
-            #if debug: print("Tried to capture node frame while out of sync")
             return(-1)
             
         
         self.node_frame = []
         search_start_time = time.time()
-        #if debug: print("Capturing Node Frame [" + str(node) + "] at " + f"{search_start_time:.5f}" + ": ", end='')
         for i in range(self.node_frame_length):
             try: 
                 ch = self.serial.read()
                 
                 if i == 0 and time.time() > search_start_time + node_timeout:
-                    #if debug: print("No node responded as of " + f"{time.time():.5f}")
                     self.node_frame = [0] * self.node_frame_length
                     return(1) 
                     
                 if ch == b'':
                     if time.time() > search_start_time + node_timeout:
-                        #if debug: print("No node responded as of " + f"{time.time():.5f}")
                         self.node_frame = [0] * self.node_frame_length
                         return(1) 
                     continue
@@ -148,9 +132,6 @@ class TDMDecoder:
                 continue
             
             self.node_frame.append(ch[0])
-        
-        #print("node frame", self.node_frame)
-        #if debug: print("")
         return(1)
         
     def is_host_frame_empty(self, frame, number_of_L4s):
@@ -194,26 +175,23 @@ class TDMDecoder:
         output_list.append("--")
         
         #Additional Arguments
-        '''
-        arguments_decoded = ""
         for arg in range(self.number_of_args):
+            arguments_decoded = ""
             args_decoded = "arg[" + str(arg) + "]: "
             this_arg = 0
             for arg_byte in range(self.arg_length):
                 this_arg = this_arg + (frame[running_host_node_offset] << (arg_byte * 8))
                 running_host_node_offset += 1
             arguments_decoded = "".join([arguments_decoded, args_decoded, f"{this_arg:08X} "])
-        output_list.append(arguments_decoded)
-        '''
+            output_list.append(arguments_decoded)
+        
         
         #Byte-Code
         byte_code_list = []
         for elem in frame:
-            byte_elem = elem.to_bytes(4, 'little')
-            byte_code_list += [byte_elem]
+            byte_code_list += ["0x{:02x}".format(elem)]
         
         output_list.append(byte_code_list)
-        
         return output_list, ([str(node_commandsentto)], devID_decoded, cmd_decoded)
 
    
@@ -234,8 +212,6 @@ class TDMDecoder:
         running_node_offset = 0
         node_commandsentto, device, command = commandsent
         if str(frame[running_node_offset]) in valid_nodeID and str(frame[running_node_offset]) in node_commandsentto:
-            #Time
-            #output_node_list = [time_for_process]
             output_node_list = []
             
             #Source
@@ -263,28 +239,23 @@ class TDMDecoder:
             running_node_offset += self.status_length
             
             #Arguments
-            '''
-            arguments_decoded = ""
             for data in range(self.number_of_data):
+                arguments_decoded = ""
                 node_frame_decoded = "arg[" + str(data) + "]: "
                 this_data = 0
                 for data_byte in range(self.data_length):
                     this_data = (this_data << 8) + frame[running_node_offset]
                     running_node_offset += 1
                 arguments_decoded = "".join([arguments_decoded, node_frame_decoded, f"{this_data:08X} "])
-            output_node_list.append(arguments_decoded)
-            '''
+                output_node_list.append(arguments_decoded)
+            
             
             #Byte-Code
             byte_code_list = []
             for elem in frame:
-                byte_elem = elem.to_bytes(4, 'little')
-                byte_code_list += [byte_elem]
+                byte_code_list += ["0x{:02x}".format(elem)]
             
             output_node_list.append(byte_code_list)
-            
-        
-            
             return output_node_list
         else:
             return

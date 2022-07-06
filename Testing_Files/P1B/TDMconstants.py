@@ -2,17 +2,10 @@ from enum import Enum
 
 #define L4_DEVICE_IDS
 class L4_DEVICE_IDS(Enum):
-    DEVICE_board						    = 0x01  # Board as a whole  - singleton 
-    DEVICE_events						    = 0x02  # Event Broker  - singleton 
-    DEVICE_motor						    = 0x03  # Motor, one and only per board 
-    DEVICE_lld							    = 0x04  # LLD device */
-    DEVICE_lld_adc                          = 0x05  # ADC for LLD signal
-    DEVICE_probe_adc                        = 0x06  # Probe ADC, only one per heater board
-    DEVICE_sleeve_adc                       = 0x07  # Sleeve ADC, only one per heater board
-    DEVICE_probe_therm1                     = 0x08  # Probe 1 thermistor
-    DEVICE_probe_therm2                     = 0x09  # Probe 2 thermistor
-    DEVICE_sleeve_therm1                    = 0x0A  # Sleeve 1 thermistor
-    DEVICE_sleeve_therm2                    = 0x0B  # Sleeve 2 thermistor
+    DEVICE_board						    = 0x00  # Board as a whole  - singleton 
+    DEVICE_events						    = 0x01  # Event Broker  - singleton 
+    DEVICE_motor						    = 0x02  # Motor, one and only per board 
+    DEVICE_lld							    = 0x03  # LLD device */ 
     DEVICE_slt_sensor_1_in				    = 0x10  # Slot sensor 1 
     DEVICE_slt_sensor_2_in				    = 0x11  # Slot sensor 2 
     DEVICE_slt_sensor_3_in				    = 0x12  # Slot sensor 3 
@@ -78,48 +71,26 @@ class L4_DEVICE_IDS(Enum):
     DEVICE_solenoid_en_out				    = 0x72  #
     DEVICE_solenoid_drive_l_pwm		        = 0x73  #
     DEVICE_solenoid_sense_in			    = 0x74  #
-    DEVICE_upper_probe_heater_pid           = 0x80  #
-    DEVICE_lower_probe_heater_pid           = 0x81  #
-    DEVICE_upper_sleeve_heater_pid          = 0x82  #
-    DEVICE_lower_sleeve_heater_pid          = 0x83  #
-    DEVICE_fan1_tachometer                  = 0x84  #
-    DEVICE_fan2_tachometer                  = 0x85  #
-    DEVICE_gripper_open_out                 = 0x86  #
-    DEVICE_gripper_close_out                = 0x87  #
-    DEVICE_rfid_reader                      = 0x88  #
 
 #define L4_BOARD_COMMANDS
 class L4_COMMAND_CODES(Enum):
-    #board commands
     COMMAND_getver			= 0x01 	#  get L4 firmware version */)
     COMMAND_getcmdver		= 0x02 	#  get version of command set */)
-    COMMAND_setloopback     = 0x0F  #  set board in "loopback" mode */)
-    
-    #protocol commands
-    COMMAND_status_get		= 0x00 	#  no action on L4 */)
+    COMMAND_status_get		= 0x00 	#  no action on L4 */) 
     COMMAND_ack_completion	= 0xF0 	#  acknowledge command completion */) 
     COMMAND_data_plus		= 0xF1 	#  request streaming data */)
-    
-    #Events
-    #Event Manager Commands
-    COMMAND_startdef		= 0x10  #  start event definition session */) 
+    COMMAND_startdef		= 0x10     #  start event definition session */) 
     COMMAND_enddef			= 0x11 	#  end event definition session */) 
-    COMMAND_idxinc			= 0x17 	#  increment event index */)
-    #Event Source Commands
+    COMMAND_idxinc			= 0x17 	#  increment event index 
     COMMAND_genevt			= 0x12 	#  tell event source what event to generate */) 
-    #Event Handler Commands
-    COMMAND_hndlevt		    = 0x15 	#  tell event handler what event to handle */)
-    
-    #Fault Source Commands
     COMMAND_genflt			= 0x13 	#  tell event source when to generate fault */) 
     COMMAND_clrflt			= 0x14 	#  clear defined faults */) 
-
-    #Motor Commands  
+    COMMAND_hndlevt		    = 0x15 	#  tell event handler what event to handle */) 
     COMMAND_enable			= 0x20 	#  enable/disable motor */)
     COMMAND_movabs			= 0x21 	#  move absolute (profile, position), return (motpos, encpos) */) 
     COMMAND_movrel			= 0x22 	#  move relative (profile, position), return (motpos, encpos) */) 
     COMMAND_change			= 0x23 	#  change speed using profile */) 
-    COMMAND_stop			= 0x24  #  stop using profile (0=current) */) 
+    COMMAND_stop			= 0x24     #  stop using profile (0=current) */) 
     COMMAND_abort			= 0x25 	#  abort */) 
     COMMAND_setpos			= 0x26 	#  set position */) 
     COMMAND_getpos			= 0x27 	#  get position, return (motpos, encpos, encraw) */) 
@@ -145,85 +116,21 @@ class L4_COMMAND_CODES(Enum):
     COMMAND_movevt			= 0x3B 	#  start move on event (event index), return (motpos, encpos) */) 
     COMMAND_setscaling		= 0x3C 	#  set full steps per revolution scale of the motor and and encoder lines per rev */) 
     COMMAND_getscaling		= 0x3D 	#  get full steps per revolution scale of the motor and encoder lines per rev */) 
-    
-    #Sensor commands
     COMMAND_read			= 0x50 	#  --
-    
-    #Binary Output Commands
     COMMAND_setbit			= 0x58 	#  set bit value */)
     COMMAND_getbit			= 0x59 	#  get back set bit value */)
     COMMAND_readbit         = 0x5A 	#  read actual pin state of bit output */)
     COMMAND_sqwave			= 0x5B 	#  generate square wave up to 5kHz */)
     COMMAND_hfwave			= 0x5C 	#  generate square wave > 5kHz*/)
     COMMAND_testmode1		= 0x5D 	#  switch to test mode 1 */)
-    COMMAND_testmode2		= 0x5E 	#  switch to test mode 2 */)
-    
-    #PWM Commands
+    COMMAND_testmode2		= 0x5E 	#  switch to test mode 2 */) 
     COMMAND_setpwm			= 0x60 	#  --
     COMMAND_getpwm			= 0x61 	#  --
     COMMAND_setpol			= 0x62 	#  --
     COMMAND_pwmen			= 0x63 	#  --
-    
-    #ADC Commands
     COMMAND_readadc		    = 0x70 	#  return a single reading */) 
     COMMAND_streamadc		= 0x71 	#  start/stop streaming data */) 
     COMMAND_adcdata		    = 0x72 	#  command code for streamed data */)
-    
-    #Heater ADC Commands
-    COMMAND_setpgabtypass   = 0x80  #  set ADS1120 PGA Bypass setting */)
-    COMMAND_setgainlevel    = 0x81  #  set ADS1120 gain level */)
-    COMMAND_setinputmax     = 0x82  #  set ADS1120 input multiplexer setting */)
-    COMMAND_setburnoutsources = 0x83 #  set ADS1120 burnout sources */)
-    COMMAND_settemperaturesensormode = 0x84 #  set ADS1120 temperature sensor mode */)
-    COMMAND_setoperatingmode = 0x85 #  set ADS1120 operating mode */)
-    COMMAND_setdatarate     = 0x86  #  set ADS1120 data rate */)
-    COMMAND_setidaccurrent  = 0x87  #  set ADS1120 IDAC Current */)
-    COMMAND_setpowerswitchconfig = 0x88 #  set ADS1120 power switch configuration */)
-    COMMAND_setfirfilter    = 0x89  #  set ADS1120 FIR filter setting */)
-    COMMAND_setvoltagereference = 0x90 #  set ADS1120 voltage reference setting */)
-    COMMAND_readheateradc   = 0x91  #  return last ADC conversion value */)
-    COMMAND_readadcconfig   = 0x92  #  return ADC config register value */)
-    COMMAND_startadc        = 0x93  #  start ADC conversions */)
-    COMMAND_stopadc         = 0x94  #  stop ADC conversions */)
-    
-    #LLD Commands
-    COMMAND_setfq           = 0xA0  #  set excitation frequency */)
-    COMMAND_getfq           = 0xA1  #  get excitation frequency */)
-    COMMAND_setsmpl         = 0xA2  #  set sampling prescaler */)
-    COMMAND_getsmpl         = 0xA3  #  get sampling prescaler */)
-    COMMAND_setthresh       = 0xA4  #  set threshold */)
-    COMMAND_getthresh       = 0xA5  #  get threshold */)
-    COMMAND_startsns        = 0xA6  #  start lld process */)
-    COMMAND_endsns          = 0xA7  #  end lld process */)
-    COMMAND_readlt          = 0xA8  #  read latch */)
-    COMMAND_readvals        = 0xA9  #  read processing values */)
-    COMMAND_setavg          = 0xAA  #  set averaging window */)
-    COMMAND_getavg          = 0xAB  #  read back averaging window */)
-    
-    #Therm Commands
-    COMMAND_readtmpr        = 0xB0  #  read last temperature */)
-    COMMAND_settcal         = 0xB1  #  set calibration values */)
-    COMMAND_gettcal         = 0xB2  #  get calibration values */)
-    
-    #Heater CTL Commands
-    COMMAND_pidenable       = 0xB8  #  enable/disable PID control */)
-    COMMAND_setpidmode      = 0xB9  #  set PID mode */)
-    COMMAND_getpidmode      = 0xBA  #  get PID mode */)
-    COMMAND_setpidparam     = 0xBB  #  set selected PID parameter */)
-    COMMAND_getpidparam     = 0xBC  #  get selected PID parameter */)
-    COMMAND_getpidvar       = 0xBD  #  get selected PID variable */)
-    COMMAND_setpidout       = 0xBE  #  set output */)
-    
-    #Tachometer
-    COMMAND_readrpm         = 0xC0  #  read measured RPM */)
-    
-    #RFID Commands
-    COMMAND_rfidenable      = 0xC8  #  enable/disable RFID scanning */)
-    COMMAND_rfidflags       = 0xC9  #  read presence flags for all antennas */)
-    COMMAND_gettaglen       = 0xCA  #  get data length of requested tag */)
-    COMMAND_gettagdata      = 0xCB  #  read data from tag */)
-    COMMAND_settagread      = 0xCC  #  mark tag as read */)
-
 
 # Define L4 Board Response Status Codes
 class L4_STATUS_CODES(Enum):
