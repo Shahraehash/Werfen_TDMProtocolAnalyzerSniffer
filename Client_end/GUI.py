@@ -362,8 +362,11 @@ class MainWindow(QMainWindow):
         self.filtered_list_of_byte_code = self.list_byte_code_text
         self.filtered_list_of_explanations = self.list_of_explanations
         if self.proxy.list_kept_indices != []:
-            self.filtered_list_of_explanations = [self.list_of_explanations[i] for i in self.proxy.list_kept_indices]
-            self.filtered_list_of_byte_code = [self.list_byte_code_text[i] for i in self.proxy.list_kept_indices]
+            self.filtered_list_of_explanations = []
+            self.filtered_list_of_byte_code = []
+            for idx in self.proxy.list_kept_indices:       
+                self.filtered_list_of_explanations += [self.list_of_explanations[idx]]
+                self.filtered_list_of_byte_code += [self.list_byte_code_text[idx]]
 
         if dataframe_idx >= 0 and dataframe_idx < self.data.shape[0]:
             self.change_explanation(self.filtered_list_of_explanations, dataframe_idx)
@@ -410,7 +413,6 @@ class MainWindow(QMainWindow):
 
         load_model = PandasModel.PandasModel(self.data)
         self.model = load_model
-        #self.datatable.setModel(self.model)
         self.proxy = CustomProxyModel.CustomProxyModel(self)
         self.proxy.setSourceModel(self.model)
         self.datatable.setModel(self.proxy)
