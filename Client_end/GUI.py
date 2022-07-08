@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import queue, os, threading, time
 
-import CustomProxyModel, global_variables, PandasModel, recieving_client, sending_client, TableView, TDMArgumentParsing
+import CustomProxyModel, global_variables, PandasModel, main, recieving_client, sending_client, TableView, TDMArgumentParsing
 
 
 data_on_queue_for_GUI = queue.Queue()
@@ -18,22 +18,25 @@ class DataThread(QObject):
         super().__init__()
         self.number_of_L4s = number_of_L4s
         self.version_of_board = version_of_board
+        self.sending_client_thread = threading.Thread(target = sending_client.main, args = (global_variables.HOST, self.version_of_board, self.number_of_L4s))
+        self.recieving_client_thread = threading.Thread(target = recieving_client.main, args = (global_variables.HOST,))
 
     def get_data(self):
-        HOST = global_variables.HOST
-
         print("Starting Clients...")
-        sending_client_thread = threading.Thread(target = sending_client.main, args = (HOST, self.version_of_board, self.number_of_L4s))
-        sending_client_thread.start()
+        self.sending_client_thread.start()
+        self.recieving_client_thread.start()
 
-        recieving_client_thread = threading.Thread(target = recieving_client.main, args = (HOST,))
-        recieving_client_thread.start()
         while global_variables.message == 'keep running':
             #once we put data on a queue send the emit signal to connect with on the UI side 
             clientelem = recieving_client.get_data()
             data_on_queue_for_GUI.put(clientelem)
             self.progress.emit()
             time.sleep(0.05)
+
+    def close_threads(self):
+        print('closing all threads')
+        self.sending_client_thread.join()
+        self.recieving_client_thread.join()
             
 
 class MainWindow(QMainWindow):
@@ -164,12 +167,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(w)
 
     def closeEvent(self, event):
-        #big red X
+        #big red X in top right
         global_variables.Close_Session = True
         self.close()
         event.accept()
+        self.data_thread.close_threads()
         self.thread.quit()
         self.start_data_collection = False
+        main.close_session()
+        
 
     def get_data(self):
         #get data from queue
