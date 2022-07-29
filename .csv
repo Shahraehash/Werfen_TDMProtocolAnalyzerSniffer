@@ -1,4 +1,0 @@
-Time,Source,Destination,Device,Command,Status,Additional Data
-1.287 seconds,--,--,--,--,--,--
-4.200 seconds,Host Frame,node 01 ,DEVICE_motor,COMMAND_movrel,--,arg[0]: 766D6772 arg[1]: 000003E8 arg[2]: 00000000 
-4.254 seconds,node 01 ,Host Frame,DEVICE_motor,COMMAND_movrel,STATUS_Success,arg[0]: E8030000 arg[1]: 73030000 arg[2]: 01000000 
