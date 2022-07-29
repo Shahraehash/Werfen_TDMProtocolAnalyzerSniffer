@@ -1,5 +1,4 @@
 from PyQt5 import QtCore, QtWidgets
-import math
 
 class TableViewer(QtWidgets.QTableView):
     
@@ -8,7 +7,10 @@ class TableViewer(QtWidgets.QTableView):
     def __init__(self, parent = None):
         QtWidgets.QTableView.__init__(self, parent)
         self.dataframe_idx = -1
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+ 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            self.dataframe_idx = math.floor(event.pos().y()/30)
+            index = self.indexAt(event.pos())
+            self.dataframe_idx = index.row()
             self.clicked.emit()
