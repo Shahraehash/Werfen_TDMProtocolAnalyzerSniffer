@@ -1,12 +1,13 @@
 TDM Protocol Analyzer Sniffer
 
-
 *************************************************************************************************************************************************************************************************************************************
+
 Description: 
 
 On Beacon, there are multiple L3 boards which control varying number of L4 boards. The communication between the L3 host and up to 7 L4 nodes is across a RS-485 bus which is built on a time-division multiplexing (TDM) principle. This means there are packets of data that is exchanged between the L3 board and L4 boards regularly. Each cycle consists of a L3 board sending a fixed packet to specific defined nodes and those nodes later respond with a status packet. This sniffer's goal is to analyze each of the packets that are sent across this bus and report it to the user. 
 
 *************************************************************************************************************************************************************************************************************************************
+
 Getting Started: 
 
 1. Download all of the folders and files in the GUI_for_TDMprotocolAnalyzer/ repository and place it on your PC. Obtain a Raspberry Pi that you can setup as the sniffer. 
@@ -30,11 +31,12 @@ Getting Started:
 4. Setting up the GUI on the PC:
 - Place the folder GUI_for_TDMprotocolAnalyzer/Client_end/ on your PC
 - Once you are in this folder on your PC run "python3 main.py -n [number of L4 boards connected]" in your terminal (default settings are -number_of_L4s = 7). If you need any help with running it run "python3 main.py -h" in terminal
-
-- A GUI should show up on your screen. Press the green run button to start the sniffer and packets will display on your screen. 
+- A GUI should show up on your screen. Press the green run button to start the sniffer and packets (non-status-get) will display on your screen (see hide status-get messages in features of the sniffer for more details). 
 - If you wish to stop seeing packets, press the red stop button. You can still restart viewing packets by pressing the green run button again. If you wish to complete quit using the sniffer, click the red 'X' button on the top right of the screen. 
+- While running the GUI, keep the terminal prompt open as all exception errors will be displayed there to help you use this tool and analyze why some packets may not be visible on the GUI.
 
 *************************************************************************************************************************************************************************************************************************************
+
 Features of the Sniffer:
 
 - Save/Open
@@ -46,7 +48,10 @@ Features of the Sniffer:
     - If you'd rather type in a filter, choose by which column in the top left of the screen and type in the value by which you wish to filter the packets by. 
 
 - Hide Status-Get Messages:
-    - The L3 board consistently sends status get messages to the L4 boards to make sure it can communicate with the L4 board across the bus. To see these messages uncheck the "hide status-get" checkbox. Otherwise the default setting is to hide these messages.
+    - The L3 board consistently sends status get messages to the L4 boards to make sure it can communicate with the L4 board across the bus. To see these messages uncheck the "hide status-get" checkbox. Otherwise the default setting is to hide these messages. Note the bus communicates these status-get messages roughly every 2 ms, so there will be a lot of messages accumulated on the GUI.
+
+- Clear Data:
+    - In the case you want to clear all of the data that is displayed on the GUI, you can press this button to remove all of the data. Note this data wont be saved unless you save it prior to clearing. This will be most useful after checking if there is any communication occuring between the L3 and L4 board. 
 
 - Summary:
     - As communication is occuring across the bus, decoded raw packets are displayed on the screen. To get a more detailed analysis of any packet, press the packet you wish to learn more about. 
@@ -54,6 +59,7 @@ Features of the Sniffer:
         - You will see the raw byte code that corresponds to the packet that is sent. In packets sent by the L3 host, you will see that the byte code is split by each node frame and that only the significant node byte code is actually highlighted in the display. 
 
 *************************************************************************************************************************************************************************************************************************************
+
 Example for Testing: 
 
 Within the GUI_for_TDMprotocolAnalyzer/Testing_Files/ there are some scripts that you can use to run some sample packets across L3 and L4 to test the functionality of the GUI

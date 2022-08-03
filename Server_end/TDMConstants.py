@@ -87,6 +87,8 @@ class L4_DEVICE_IDS(Enum):
     DEVICE_gripper_open_out                 = 0x86  #
     DEVICE_gripper_close_out                = 0x87  #
     DEVICE_rfid_reader                      = 0x88  #
+    
+
 
 #define L4_BOARD_COMMANDS
 class L4_COMMAND_CODES(Enum):
@@ -227,9 +229,14 @@ class L4_COMMAND_CODES(Enum):
 
 # Define L4 Board Response Status Codes
 class L4_STATUS_CODES(Enum):
+    #Success Status Code
 	STATUS_Success = 0x0 #Success */ \
+	
+	#Command Status Code
 	STATUS_CommandExecuting = 0x01 #Command is pending completion */ \
 	STATUS_CommandAborted = 0x02 #Command was aborted */ \
+	
+	#Error Status Code
 	STATUS_ErrorInvalidDevice = 0x81 #Invalid device ID in the command */ \
 	STATUS_ErrorInvalidCommand = 0x82 #Invalid command */ \
 	STATUS_ErrorInvalidArgCount = 0x83 #Invalid number of command arguments */ \
@@ -239,3 +246,17 @@ class L4_STATUS_CODES(Enum):
 	STATUS_ErrorEStop = 0x87 #E-Stop condition is detected */ \
 	STATUS_ErrorNotSupported = 0x88 #Function not supported */ \
 	STATUS_ErrorResourceNotAvailable = 0x89 #Out of specified resource */ \
+	
+class IS_IN():
+    set_of_DEVICE_ID_values = set(item.value for item in L4_DEVICE_IDS)
+    set_of_COMMAND_ID_values = set(item.value for item in L4_COMMAND_CODES)
+    set_of_STATUS_CODES_values = set(item.value for item in L4_STATUS_CODES)
+    
+    def dev_is_in(value):
+        return value in IS_IN.set_of_DEVICE_ID_values
+    
+    def cmd_is_in(value):
+        return value in IS_IN.set_of_COMMAND_ID_values
+    
+    def stat_is_in(value):
+        return value in IS_IN.set_of_STATUS_CODES_values

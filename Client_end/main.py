@@ -1,6 +1,6 @@
 #packages
 from PyQt5.QtWidgets import QApplication
-import argparse, os, sys, threading
+import argparse, os, sys
 
 #python scripts
 import GUI

@@ -1,3 +1,4 @@
+#packages
 from PyQt5 import QtCore, QtGui
 
 class PandasModel(QtCore.QAbstractTableModel):
@@ -28,9 +29,10 @@ class PandasModel(QtCore.QAbstractTableModel):
                     return QtGui.QColor('darkgray')
                 if value == 'STATUS_Success':
                     return QtGui.QColor('lightgreen')
+                if value[:13] == 'STATUS_Command':
+                    return QtGui.QColor('yellow')
                 if value[:11] == 'STATUS_Error':
                     return QtGui.QColor('red')
-                return QtGui.QColor('yellow')
         return None
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):

@@ -6,6 +6,7 @@ class CustomProxyModel(QSortFilterProxyModel):
         self._filters = dict()
         self.list_kept_indices = []
 
+
     @property
     def filters(self):
         return self._filters

@@ -1,4 +1,4 @@
-from re import T
+#packages
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QObject, QPoint, QSignalMapper, QThread)
 from PyQt5.QtWidgets import (QAction, QCheckBox, QComboBox, QFileDialog, QGridLayout,  QHBoxLayout, QHeaderView, QInputDialog, QMainWindow, QMenu, QLineEdit, QLabel, QPushButton, QStyle, QVBoxLayout, QWidget)
 from PyQt5.QtGui import QFont
@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import queue, os, threading, time
 
+#python scripts
 import CustomProxyModel, global_variables, PandasModel, main, recieving_client, sending_client, TableView, TDMArgumentParsing
 
 
@@ -34,7 +35,7 @@ class DataThread(QObject):
             time.sleep(0.05)
 
     def close_threads(self):
-        print('closing all threads')
+        print('Closing all threads')
         self.sending_client_thread.join()
         self.recieving_client_thread.join()
             
@@ -57,10 +58,11 @@ class MainWindow(QMainWindow):
         for elem in self.column_names:
             self.dictionary_data[elem] = ['']
         self.data = pd.DataFrame(self.dictionary_data)
+        self.filtered_data = pd.DataFrame(self.dictionary_data)
         self.datatable = TableView.TableViewer(self)
         self.number_of_entries = 0
         self.data_indices = []
-        
+
         #main pane
         main_layout = QVBoxLayout()
 
@@ -115,29 +117,23 @@ class MainWindow(QMainWindow):
         filter_line.addWidget(self.filter_pane, 0, 3, 1, 1)
         main_layout.addLayout(filter_line)
         
-        
-        next_line = QGridLayout()
+        next_line = QHBoxLayout()
         #Execution Tag
         self.status = QLabel()
-        next_line.addWidget(self.status, 0, 0)
-
+        next_line.addWidget(self.status, 10)
         #Filter checkbox for the status_get command
         self.status_get_command_checkbox = QCheckBox()
         self.status_get_command_checkbox.setText("Hide Status-Get Command")
         self.status_get_command_checkbox.setChecked(True)
-        self.status_get_command_checkbox.stateChanged.connect(self.filter_command)
-        next_line.addWidget(self.status_get_command_checkbox, 0, 3)
-
+        self.status_get_command_checkbox.stateChanged.connect(self.filter_command, 2)
+        next_line.addWidget(self.status_get_command_checkbox)
         #Button to clear all data on GUI
         self.clearData_btn = QPushButton()
+        self.clearData_btn.setDisabled(True)
         self.clearData_btn.setText("Clear All Data")
         self.clearData_btn.clicked.connect(self.cleardata)
-        next_line.addWidget(self.clearData_btn, 0, 4)
+        next_line.addWidget(self.clearData_btn, 1)
         main_layout.addLayout(next_line)
-
-        self.filtered_data = pd.DataFrame()
-        self.filtered_list_of_explanations = []
-        self.filtered_list_of_byte_code = []
          
         #Datatable
         self.datatable.clicked.connect(self.summary)
@@ -146,17 +142,16 @@ class MainWindow(QMainWindow):
         #Explanation of command
         self.explanation = QLabel()
         self.explanation.setFont(QFont('Arial', 16))
-        #self.explanation.setAlignment(Qt.AlignCenter)
         self.source = ""
         self.list_of_explanations = []
+        self.filtered_list_of_explanations = []
         self.explanation.setStyleSheet("border: 1px solid black;")
         main_layout.addWidget(self.explanation)
         
-
         #Byte Code 
         self.byte_code = QLabel()
-        #self.byte_code.setAlignment(Qt.AlignCenter)
         self.list_byte_code_text = []
+        self.filtered_list_of_byte_code = []
         self.byte_code.setStyleSheet("border: 1px solid black;")
         main_layout.addWidget(self.byte_code)
         
@@ -165,13 +160,13 @@ class MainWindow(QMainWindow):
         w.setLayout(main_layout)
         self.setCentralWidget(w)
 
-    # Collecting Data Process.............................................................................................................
+    # Collecting Data ................................................................................................................................................................
     def get_data(self):
         #get data from queue
         while not data_on_queue_for_GUI.empty():
             data = self.data
             TDM_data = data_on_queue_for_GUI.get()
-            if TDM_data != ["empty string"]:
+            if TDM_data not in ["empty string", "No Serial Connection", "closed session"]:
 
                 #check if we have a status from our recieving end
                 if TDM_data[0][-2] != '--':
@@ -233,15 +228,16 @@ class MainWindow(QMainWindow):
         self.proxy.setSourceModel(self.model)
         self.datatable.setModel(self.proxy)
 
-    #............................................................................................................................................
+    #.................................................................................................................................................................................
 
-    # Start Process *****************************************************************************************************************************
+    # Start Process ******************************************************************************************************************************************************************
     def start_process(self):
         self.status.setText("Running...")
         self.display_data_collection = True
         self.label.setDisabled(True)
         self.combobox.setDisabled(True)
         self.filter_pane.setDisabled(True)
+        self.clearData_btn.setDisabled(True)
         if self.start_data_collection != True:
             self.invoke_data_collection_process()
             self.start_data_collection = True
@@ -275,9 +271,9 @@ class MainWindow(QMainWindow):
         self.proxy.setSourceModel(self.model)
         self.datatable.setModel(self.proxy)
 
-    #*********************************************************************************************************************************************
+    #*********************************************************************************************************************************************************************************
     
-    # Generate Summary Data ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    # Generate Summary Data ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     def summary(self):
         #initiate the summary of the results by calling the explanation and the byte code
         dataframe_idx = self.datatable.dataframe_idx
@@ -298,9 +294,50 @@ class MainWindow(QMainWindow):
         #explanation textbox
         self.explanation.setText(list_of_explanation[dataframe_idx])                                     
     
+    def color_code(self, bytecode, start_idx, tabspace):
+        black_color = '<font color="black">'
+        gray_color = '<font color="gray">'
+        text = ""
+        
+        if bytecode[1] != '0x00':
+            text += black_color
+        else:
+            text += gray_color
+
+        idx = start_idx
+        for elem in bytecode:
+            text += global_variables.conv_byte(elem)
+            if idx % 4 == 0:
+                text += tabspace
+            idx += 1
+
+        text += '</font><br>'
+        return text
+
+
+    def change_byte_code(self, list_of_byte_code, dataframe_idx):
+        tabspace = '&nbsp;'*8
+    
+        text = ""
+        if list_of_byte_code[dataframe_idx] == "--":
+            text = ""
+        else:
+            for i in range(9):
+                if i == 0:
+                    text += self.color_code(list_of_byte_code[dataframe_idx][:4], 1, tabspace)
+                elif i == 8:
+                    text += self.color_code(list_of_byte_code[dataframe_idx][-2:], 1, tabspace)
+                else:
+                    text += self.color_code(list_of_byte_code[dataframe_idx][15*(i-1)+4:15*(i)+4], 2, tabspace)
+                
+        self.byte_code.setText(text)
+    '''
     def change_byte_code(self, list_of_byte_code, dataframe_idx):
         #byte code textbox
-        text = '<font color="black">'
+        black_font = '<font color="black">'
+        gray_font = '<font color="gray">'
+
+        text = black_font
         if list_of_byte_code[dataframe_idx] == "--":
             text = ""
         else:
@@ -331,10 +368,10 @@ class MainWindow(QMainWindow):
                                 text += tab_space_character
                                 tab_separator = 0
                     if first_node_values:
-                        text += '</font><font color="gray">'
+                        text += '</font>' + gray_font
                         first_node_values = False
                     text += break_point_character
-                text += '</font><font color = "black">'
+                text += '</font>' + black_font
                 for elem in byte_code_elem[-2:]:
                     text += global_variables.conv_byte(elem)
                 text += '</font>'
@@ -350,21 +387,31 @@ class MainWindow(QMainWindow):
                         tab_separator = 0
                 text += '</font>'
         self.byte_code.setText(text) 
+    '''
+    #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    #Clear Data @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    #Clear Data @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     def cleardata(self):
-        self.data = pd.DataFrame()
+        self.data = pd.DataFrame(self.dictionary_data)
+        load_model = PandasModel.PandasModel(self.data)
+        self.model = load_model
+        self.proxy = CustomProxyModel.CustomProxyModel()
+        self.proxy.setSourceModel(self.model)
+        self.datatable.setModel(self.proxy)
         self.initial_datatable()
+
+        self.status.setText("Cleared Data")
         self.filtered_list_of_explanations = []
         self.list_of_explanations = []
         self.filtered_list_of_byte_code = []
         self.list_byte_code_text = []
 
-    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        with data_on_queue_for_GUI.mutex:
+            data_on_queue_for_GUI.queue.clear()
 
-    # Filter Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    # Filter Data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     def filter_command(self):
         if self.status_get_command_checkbox.isChecked():
             global_variables.Hide_Status_Get_Commands = True 
@@ -416,26 +463,35 @@ class MainWindow(QMainWindow):
         #setting filter based on text entered on the line
         self.proxy.setFilter(searchtext, self.combobox.currentIndex())
 
-    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    # Stop Process """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    # Stop Process """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     def stop_process(self): #stop data collection
         self.display_data_collection = False
         self.status.setText("All execution has been stopped")
         self.label.setDisabled(False)
         self.combobox.setDisabled(False)
         self.filter_pane.setDisabled(False)
+        self.clearData_btn.setDisabled(False)
 
-    #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+        while not data_on_queue_for_GUI.empty():
+            data_on_queue_for_GUI.get()
 
-    # Save Data$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+    # Save Data$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     def saveFile(self):
         #save the dataframe
         name, _ = QInputDialog.getText(self, 'Input Dialog', 'Enter file name:')
-        path = str(os.path.dirname(os.path.abspath(__file__))) + "/" + "TDMProtocolAnalyzer_" + str(name) + '.csv'
-        self.add_explanation_to_csv()
-        self.add_byte_code_to_csv()
-        self.data.to_csv(path, index = False)
+        if name != "":
+            path = str(os.path.dirname(os.path.abspath(__file__))) + "/" + "TDMProtocolAnalyzer_" + str(name) + '.csv'
+            self.add_explanation_to_csv()
+            self.add_byte_code_to_csv()
+            self.data.to_csv(path, index = False)
+            self.status.setText("Saved data to TDMProtocolAnalyzer_" + str(name) + '.csv')
+        else:
+            print("ERROR: An empty filename was given! Please try saving file again!")
     
     def add_explanation_to_csv(self):
         self.data['Explanations'] = list(self.list_of_explanations)
@@ -443,45 +499,55 @@ class MainWindow(QMainWindow):
     def add_byte_code_to_csv(self):
         self.data['Byte Code'] = list(self.list_byte_code_text)
 
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-    # Load Data--------------------------------------------------------------------------------------------------------------------------------------
+    # Load Data-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def loadFile(self):
         #load a saved dataframe 
         fileName, _ = QFileDialog.getOpenFileName(self, "Open File", "", "CSV Files (*.csv)")
-        df = pd.read_csv(fileName)
+        if fileName.split('/')[-1][:19] == "TDMProtocolAnalyzer_":
 
-        self.list_of_explanations = df['Explanations'].replace(np.nan, "").tolist()
+            try:
+                df = pd.read_csv(fileName)
+                self.list_of_explanations = df['Explanations'].replace(np.nan, "").tolist()
 
-        raw_byte_code_from_df = df['Byte Code'].tolist()
-        list_byte_code_input = []
-        for elem in raw_byte_code_from_df:
-            if elem == "--":
-                list_byte_code_input += ["--"]
-            else:
-                elem_list = []
-                for item in elem.split(","):
-                    elem_list += [item]
-                list_byte_code_input += [elem_list]
-        self.list_byte_code_text = list_byte_code_input
+                self.status.setText("Opened " + fileName)
+                raw_byte_code_from_df = df['Byte Code'].tolist()
+                list_byte_code_input = []
+                for elem in raw_byte_code_from_df:
+                    if elem == "--":
+                        list_byte_code_input += ["--"]
+                    else:
+                        elem_list = []
+                        for item in elem.split(","):
+                            elem_list += [item]
+                        list_byte_code_input += [elem_list]
+                self.list_byte_code_text = list_byte_code_input
 
 
-        data = df.drop(columns = ['Explanations', 'Byte Code'], axis = 1)
-        data.fillna('', inplace=True)
-        self.data = data
+                data = df.drop(columns = ['Explanations', 'Byte Code'], axis = 1)
+                data.fillna('', inplace=True)
+                self.data = data
 
-        load_model = PandasModel.PandasModel(self.data)
-        self.model = load_model
-        self.proxy = CustomProxyModel.CustomProxyModel()
-        self.proxy.setSourceModel(self.model)
-        self.datatable.setModel(self.proxy)
-        header = self.datatable.horizontalHeader()
-        for i in range(len(self.data.columns)):
-            header.setSectionResizeMode(i, QHeaderView.Stretch)
+                load_model = PandasModel.PandasModel(self.data)
+                self.model = load_model
+                self.proxy = CustomProxyModel.CustomProxyModel()
+                self.proxy.setSourceModel(self.model)
+                self.datatable.setModel(self.proxy)
+                header = self.datatable.horizontalHeader()
+                for i in range(len(self.data.columns)):
+                    header.setSectionResizeMode(i, QHeaderView.Stretch)
+            
+            except:
+                print("ERROR: No file was selected to open! Please try opening the file again!")
+                self.cleardata()
+        else:
+            print("ERROR: Incorrect file type given! Please Choose a file with the correct format!")
+            self.cleardata()
 
-    #--------------------------------------------------------------------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    # Closing Window \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    # Closing Window \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     def closeEvent(self, event):
         #big red X in top right
         global_variables.Close_Session = True
@@ -491,11 +557,14 @@ class MainWindow(QMainWindow):
             self.data_thread.close_threads()
         except:
             pass
-        self.thread.quit()
+        try:
+            self.thread.quit()
+        except:
+            pass
         self.start_data_collection = False
         main.close_session()
         
-    #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     
    
     
