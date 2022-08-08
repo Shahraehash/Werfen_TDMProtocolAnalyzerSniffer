@@ -91,7 +91,7 @@ Within the GUI_for_TDMprotocolAnalyzer/Testing_Files/ there are some scripts tha
         - Command: 34
         - Arg 0: rgmv
         - Arg 1: 10000
-        - Arg 2: 
+        - Arg 2: (leave blank)
 
 - For P1B (without the Fast485Driver)
     - Connect your PC to your board through an ethernet cable. Configure your network settings for that ethernet port so it has the following settings:
