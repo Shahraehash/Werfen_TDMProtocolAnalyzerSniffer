@@ -76,7 +76,24 @@ Within the GUI_for_TDMprotocolAnalyzer/Testing_Files/ there are some scripts tha
             - abort(node)
             - get_status(node)
             - get_ver(node)
-- For P1B:
+
+- For P1B (with the Fast485Driver)
+    - Follow the steps on the Confluence page to set up the petalinux environment (https://jira.ilww.com:8099/confluence/display/BCN/L3+VM+Setup+-+P1B). 
+    - Once you are connected to your L3 board through a serial terminal (sudo picocom /dev/ttyUSB0 -b115200), on your linux machine navigate to <Project_Root>/beacon_l3/bsp/project-spec/meta-user/recipes-apps/beacon/files and run:
+        - scp -r firmware root@192.168.1.100:/usr/bin/beacon
+        - scp -r tests root@192.168.1.100:/usr/bin/beacon
+    - On the serial terminal window in /usr/bin/beacon/firmware/server/drivers/fast485 run:
+        - python3 fast485_service.py &
+        - python3 L4CmdShell.py
+    - Once you are in this shell you can run move commands as follows:
+        - Node: 1
+        - Device: 3
+        - Command: 34
+        - Arg 0: rgmv
+        - Arg 1: 10000
+        - Arg 2: 
+
+- For P1B (without the Fast485Driver)
     - Connect your PC to your board through an ethernet cable. Configure your network settings for that ethernet port so it has the following settings:
         - IP address: 192.168.1.150
         - Subnet mask: 255.0.0.0

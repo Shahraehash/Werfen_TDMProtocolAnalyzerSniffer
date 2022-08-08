@@ -1,8 +1,5 @@
 #packages
-import pickle, queue, socket, time 
-
-#python scripts
-import global_variables
+import pickle, queue, socket
 
 PORT = 65432
 GUI_queue = queue.Queue()
@@ -10,7 +7,7 @@ GUI_queue = queue.Queue()
 def main(HOST):
     recieving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
-    timeout_time = (60.0)*5
+    timeout_time = (60.0)*5 #5 minutes
     recieving_socket.settimeout(timeout_time)
     print("Recieving Client trying to connect to Raspberry Pi...")
     try:
@@ -25,10 +22,12 @@ def main(HOST):
 
                 try:
                     decoded_data = pickle.loads(data)
+                    print(decoded_data)
                     if decoded_data == "closed_session":
                         recieving_socket.close()
                         print("Closing Recieving Client connection")
                         break
+                    
                     elif decoded_data == "No Serial Connection":
                         print("ERROR: No Serial Connection! Check Connection of Raspberry Pi to Board!")
                         
@@ -37,11 +36,11 @@ def main(HOST):
 
                 except:
                     continue
-            except recieving_socket.timeout:
+            except:
                 print("ERROR: Recieving Client timed out! Please relaunch the GUI and the Raspberry Pi to reconnect!")
                 break
 
-    except recieving_socket.error:
+    except:
         print("ERROR: Receiving Client couldn't connect to the Raspberry Pi! Please try to relaunch the GUI and the Raspberry Pi to reconnect!")
 
 def get_data():

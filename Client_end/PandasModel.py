@@ -21,18 +21,19 @@ class PandasModel(QtCore.QAbstractTableModel):
                 return str(self._data.iloc[index.row(), index.column()])
             
             if role == QtCore.Qt.BackgroundRole:
-                value = str(self._data.Status.values.tolist()[index.row()])
-                #color code according to the status 
-                if value == '':
+                source_frame = str(self._data.Source.values.tolist()[index.row()][:3])
+                if source_frame == 'Host':
+                    return QtGui.QColor('lightblue')
+                elif source_frame == 'Node':
+                    status_val = str(self._data.Status.values.tolist()[index.row()])
+                    if status_val == 'STATUS_Success':
+                        return QtGui.QColor('lightgreen')
+                    elif status_val[:13] == 'STATUS_Command':
+                        return QtGui.QColor('yellow')
+                    elif status_val[:11] == 'STATUS_Error':
+                        return QtGui.QColor('red')
+                else: 
                     return QtGui.QColor('silver')
-                if value == '--':
-                    return QtGui.QColor('darkgray')
-                if value == 'STATUS_Success':
-                    return QtGui.QColor('lightgreen')
-                if value[:13] == 'STATUS_Command':
-                    return QtGui.QColor('yellow')
-                if value[:11] == 'STATUS_Error':
-                    return QtGui.QColor('red')
         return None
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):

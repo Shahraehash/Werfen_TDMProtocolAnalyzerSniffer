@@ -169,6 +169,7 @@ class MainWindow(QMainWindow):
             if TDM_data not in ["empty string", "No Serial Connection", "closed session"]:
 
                 #check if we have a status from our recieving end
+                #print(TDM_data)
                 if TDM_data[0][-2] != '--':
                     self.completed_execution = True
             
@@ -204,12 +205,12 @@ class MainWindow(QMainWindow):
             if arguments != "":
                 argument_clause = " with arguments" + arguments
             output_text = "".join([str(row_value['Source']), ' sent ', str(row_value['Command'][8:]), ' ', str(row_value['Device'][7:]), ' command to ', str(row_value['Destination'][:len(row_value['Destination'])-1]), argument_clause, '.'])
-        if str(row_value['Source'][:4]) == 'node':
+        if str(row_value['Source'][:4]) == 'Node':
             argument_clause = " with no arguments"
             arguments = TDMArgumentParsing.decoding_arguments(TDMArgumentParsing.Node_Frame_Argument_Types, row_value) 
             if arguments != "":
                 argument_clause = " with arguments" + arguments
-            output_text = "".join([str(row_value['Source']), 'began execution of the ', str(row_value['Command'][8:]), ' ', str(row_value['Device'][7:]), ' command from ', str(row_value['Destination']), argument_clause, ' and had ', str(row_value['Status'][7:]), "."])
+            output_text = "".join([str(row_value['Source']), ' began execution of the ', str(row_value['Command'][8:]), ' ', str(row_value['Device'][7:]), ' command from ', str(row_value['Destination']), argument_clause, ' and had ', str(row_value['Status'][7:]), "."])
         self.list_of_explanations += [output_text]
 
     def add_buffer(self):
@@ -262,8 +263,10 @@ class MainWindow(QMainWindow):
 
     def initial_datatable(self):
         #add initial entry
-        self.list_of_explanations += [""]
-        self.list_byte_code_text += ["--"]
+        self.list_of_explanations = [""]
+        self.list_byte_code_text = ["--"]
+        self.filtered_list_of_explanations = []
+        self.filtered_list_of_byte_code = []
         
         df_as_pandas_model = PandasModel.PandasModel(self.data)
         self.model = df_as_pandas_model
@@ -279,7 +282,7 @@ class MainWindow(QMainWindow):
         dataframe_idx = self.datatable.dataframe_idx
         self.filtered_list_of_byte_code = self.list_byte_code_text
         self.filtered_list_of_explanations = self.list_of_explanations
-        if self.proxy.list_kept_indices != []:
+        if hasattr(self, 'proxy') and self.proxy.list_kept_indices != []:
             self.filtered_list_of_explanations = []
             self.filtered_list_of_byte_code = []
             for idx in self.proxy.list_kept_indices:       
@@ -322,92 +325,38 @@ class MainWindow(QMainWindow):
         if list_of_byte_code[dataframe_idx] == "--":
             text = ""
         else:
-            for i in range(9):
-                if i == 0:
-                    text += self.color_code(list_of_byte_code[dataframe_idx][:4], 1, tabspace)
-                elif i == 8:
-                    text += self.color_code(list_of_byte_code[dataframe_idx][-2:], 1, tabspace)
-                else:
-                    text += self.color_code(list_of_byte_code[dataframe_idx][15*(i-1)+4:15*(i)+4], 2, tabspace)
+            if len(list_of_byte_code[dataframe_idx]) == 111:
+                for i in range(9):
+                    if i == 0:
+                        text += self.color_code(list_of_byte_code[dataframe_idx][:4], 1, tabspace)
+                    elif i == 8:
+                        text += self.color_code(list_of_byte_code[dataframe_idx][-2:], 1, tabspace)
+                    else:
+                        text += self.color_code(list_of_byte_code[dataframe_idx][15*(i-1)+4:15*(i)+4], 2, tabspace)
+            elif len(list_of_byte_code[dataframe_idx]) == 18:
+                text = '<font color="black">'
+                for idx, elem in enumerate(list_of_byte_code[dataframe_idx]):
+                    if idx != 0 and idx % 4 == 0:
+                        text += tabspace
+                    text += global_variables.conv_byte(elem)
+                text += '</font>'
                 
         self.byte_code.setText(text)
-    '''
-    def change_byte_code(self, list_of_byte_code, dataframe_idx):
-        #byte code textbox
-        black_font = '<font color="black">'
-        gray_font = '<font color="gray">'
-
-        text = black_font
-        if list_of_byte_code[dataframe_idx] == "--":
-            text = ""
-        else:
-            byte_code_elem = list_of_byte_code[dataframe_idx]
-            tab_space_character = '&nbsp;'*8
-            break_point_character = '<br>'
-
-            #host frame
-            if len(byte_code_elem) == 111:
-                for elem in byte_code_elem[:4]:
-                    text += global_variables.conv_byte(elem)
-                text += break_point_character
-                for i in range(int(self.number_of_L4s)):
-                    tab_separator = 0
-                    first_three_ids = True
-                    first_node_values = False
-                    for elem in byte_code_elem[15*i+4:15*(i+1)+4]:
-                        text += global_variables.conv_byte(elem)
-                        tab_separator += 1
-                        if first_three_ids:
-                            if tab_separator == 3:
-                                text += tab_space_character
-                                tab_separator = 0
-                                first_three_ids = False
-                                first_node_values = True
-                        else:
-                            if tab_separator == 4:
-                                text += tab_space_character
-                                tab_separator = 0
-                    if first_node_values:
-                        text += '</font>' + gray_font
-                        first_node_values = False
-                    text += break_point_character
-                text += '</font>' + black_font
-                for elem in byte_code_elem[-2:]:
-                    text += global_variables.conv_byte(elem)
-                text += '</font>'
-
-            #node frame
-            elif len(byte_code_elem) == 18:
-                tab_separator = 0
-                for elem in byte_code_elem:
-                    text += global_variables.conv_byte(elem)
-                    tab_separator += 1
-                    if tab_separator == 4:
-                        text += tab_space_character
-                        tab_separator = 0
-                text += '</font>'
-        self.byte_code.setText(text) 
-    '''
+    
     #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     #Clear Data @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     def cleardata(self):
         self.data = pd.DataFrame(self.dictionary_data)
-        load_model = PandasModel.PandasModel(self.data)
-        self.model = load_model
-        self.proxy = CustomProxyModel.CustomProxyModel()
-        self.proxy.setSourceModel(self.model)
-        self.datatable.setModel(self.proxy)
         self.initial_datatable()
 
         self.status.setText("Cleared Data")
-        self.filtered_list_of_explanations = []
-        self.list_of_explanations = []
-        self.filtered_list_of_byte_code = []
-        self.list_byte_code_text = []
 
         with data_on_queue_for_GUI.mutex:
             data_on_queue_for_GUI.queue.clear()
+        
+        with recieving_client.GUI_queue.mutex:
+            recieving_client.GUI_queue.queue.clear()
 
     #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -480,7 +429,7 @@ class MainWindow(QMainWindow):
 
     #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-    # Save Data$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # Save Data $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     def saveFile(self):
         #save the dataframe
         name, _ = QInputDialog.getText(self, 'Input Dialog', 'Enter file name:')
@@ -501,11 +450,11 @@ class MainWindow(QMainWindow):
 
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-    # Load Data-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # Load Data -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def loadFile(self):
         #load a saved dataframe 
         fileName, _ = QFileDialog.getOpenFileName(self, "Open File", "", "CSV Files (*.csv)")
-        if fileName.split('/')[-1][:19] == "TDMProtocolAnalyzer_":
+        if fileName.split('/')[-1][:20] == "TDMProtocolAnalyzer_":
 
             try:
                 df = pd.read_csv(fileName)
@@ -563,7 +512,7 @@ class MainWindow(QMainWindow):
             pass
         self.start_data_collection = False
         main.close_session()
-        
+
     #\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     
    

@@ -1,5 +1,5 @@
 #!/bin/python
-import global_vars, TDMCapturePackets
+import TDMCapturePackets
 from TDMConstants import L4_DEVICE_IDS, L4_COMMAND_CODES, L4_STATUS_CODES, IS_IN
 
 import queue
@@ -8,7 +8,8 @@ frame_queue = queue.Queue()
 
 class TDMDecoder:
     def __init__(self, number_of_L4s):
-    
+        self.number_of_L4s = number_of_L4s
+
         self.host_frame = []
         self.node_frames = []
         
@@ -19,8 +20,7 @@ class TDMDecoder:
         self.node_frame_length = 18
         
         self.number_of_args = 3
-        self.number_of_data = 3
-        
+        self.number_of_data = 3        
       
     def capture_frames(self):
         #clear the frames
@@ -35,7 +35,7 @@ class TDMDecoder:
             self.host_frame.append(packet[host_idx]) 
         
         #isolate the node frames by node
-        for node in range(global_vars.number_of_L4s):
+        for node in range(self.number_of_L4s):
             node_frame = []
             for node_idx in range(self.host_frame_length+(self.node_frame_length*node), self.host_frame_length+(self.node_frame_length*(node+1))):
                 if node_idx < len(packet):
@@ -47,17 +47,17 @@ class TDMDecoder:
 
         return self.host_frame, self.node_frames
     
-    def decoding_frame(self, host_frame, node_frames, number_of_L4s):
+    def decoding_frame(self, host_frame, node_frames):
         #check host_frame is valid and check that node frame is valid
         if hex(host_frame[0]) != hex(self.signature_byte_0) and hex(host_frame[1]) != hex(self.signature_byte_1):
             return 
         if len(host_frame) != self.host_frame_length:
             return
         counter = 0
-        for node in range(int(number_of_L4s)):
+        for node in range(self.number_of_L4s):
             host_output_list = ["Host Frame"]
             decoded_host_frame, deviceID, commandsent = self.decode_host_frame_for_node(node, host_frame, host_frame[(15*node)+4:(15*(node+1))+4], host_output_list)
-            decoded_corresponding_node_frame = self.decode_node_frame(node+1, node_frames[node], deviceID, commandsent)
+            decoded_corresponding_node_frame = self.decode_node_frame(node_frames[node], deviceID, commandsent)
            
             if decoded_corresponding_node_frame != None:
                 
@@ -70,7 +70,7 @@ class TDMDecoder:
 
             
     
-    def decode_host_frame_for_node(self, node, host_frame, host_frame_for_node, host_output_list):
+    def decode_host_frame_for_node(self, host_frame, host_frame_for_node, host_output_list):
         #Host Frame
         decoded_host_frame = host_output_list
         
@@ -78,28 +78,12 @@ class TDMDecoder:
         decoded_host_frame.append("".join(["Node ", str(host_frame_for_node[0])]))
         
         #Device ID
-        '''
-        devID_decoded = ""
-        try:
-            devID_decoded = L4_DEVICE_IDS(host_frame_for_node[1]).name
-        except:
-            devID_decoded = "--"
-        decoded_host_frame.append(devID_decoded)
-        '''
         devID_decoded = "--"
         if IS_IN.dev_is_in(host_frame_for_node[1]):
             devID_decoded = str(L4_DEVICE_IDS(host_frame_for_node[1]).name)
         decoded_host_frame.append(devID_decoded)
         
         #Command ID
-        '''
-        cmd_decoded = ""
-        try:
-            cmd_decoded = str(L4_COMMAND_CODES(host_frame_for_node[2]).name)
-        except:
-            cmd_decoded = "--"
-        decoded_host_frame.append(cmd_decoded)
-        '''
         cmd_decoded = "--"
         if IS_IN.cmd_is_in(host_frame_for_node[2]):
             cmd_decoded = str(L4_COMMAND_CODES(host_frame_for_node[2]).name)
@@ -147,14 +131,6 @@ class TDMDecoder:
         decoded_node_frame.append(cmd_sent)
         
         #Status
-        '''
-        status_string = ""
-        try:
-            status_string = L4_STATUS_CODES(node_frame[3]).name
-        except:
-            status_string = "--"
-        decoded_node_frame.append(status_string)
-        '''
         status_string = "--"
         if IS_IN.stat_is_in(node_frame[3]):
             status_string = str(L4_STATUS_CODES(node_frame[3]).name)

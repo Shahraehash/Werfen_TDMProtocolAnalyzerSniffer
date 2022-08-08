@@ -1,4 +1,4 @@
-import queue, time
+import queue
 import global_vars, TDMStreamingSerial
 
 packet_queue = queue.Queue()

@@ -1,10 +1,10 @@
-import queue, time
+import queue
 import global_vars, TDMDecoder
 
 TDM_data_queue = queue.Queue()
 
 
-def TDM_Analyzer(commandsent):
+def TDM_Analyzer():
     
     decoder = TDMDecoder.TDMDecoder(global_vars.number_of_L4s)
     
@@ -17,9 +17,9 @@ def TDM_Analyzer(commandsent):
         this_host_frame, this_node_frames = decoder.capture_frames()
         
     
-        counter = decoder.decoding_frame(this_host_frame, this_node_frames, global_vars.number_of_L4s)
+        counter = decoder.decoding_frame(this_host_frame, this_node_frames)
        
-        for num in range(counter):
+        for _ in range(counter):
             frame = [TDMDecoder.frame_queue.get()]
             
             if global_vars.hide_status_get: #when we want to hide the status get commands, filter them out and dont put them on the queue

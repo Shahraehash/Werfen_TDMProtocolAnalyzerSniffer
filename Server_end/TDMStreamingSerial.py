@@ -1,5 +1,5 @@
-import json, queue, serial, time 
-import global_vars, TDMProtocolAnalyzer
+import queue, serial, time 
+import TDMProtocolAnalyzer
 
 serial_port_device='/dev/ttyS0'
 serial_baud_rate=921600

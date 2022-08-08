@@ -1,6 +1,6 @@
-import pickle, socket, threading, time
+import pickle, socket, threading
 
-import global_vars, TDMCapturePackets, TDMConstants, TDMProtocolAnalyzer, TDMStreamingSerial
+import TDMCapturePackets, TDMProtocolAnalyzer, TDMStreamingSerial
 
 def main(HOST, PORT):
     sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,34 +20,12 @@ def main(HOST, PORT):
     capture_packet_thread.start()
 
     #thread to Decode the data and prepare it so it can be sent to the GUI
-    commandsent = (['NA'], 'NA')
-    TDMprotocol_thread = threading.Thread(target = TDMProtocolAnalyzer.TDM_Analyzer, args = (commandsent,))
+    TDMprotocol_thread = threading.Thread(target = TDMProtocolAnalyzer.TDM_Analyzer, )
     TDMprotocol_thread.start()
     
     
     while True:
-        '''
-        print(global_vars.close_session)
-        if global_vars.close_session:
-            TDMProtocolAnalyzer.empty_queue()
-            closed_session_msg = pickle.dumps(raw_TDM_data)
-            for _ in range(10): #just to ensure the close connection message gets sent
-                conn.send(len(closed_session_msg).to_bytes(2,'big') + closed_session_msg)
-            conn.close()
-            print("closed the sending server connection")
-            break
-        else:
-            raw_TDM_data = TDMProtocolAnalyzer.get_TDM_data()
-            for elem in raw_TDM_data:
-                TDM_data_to_send = pickle.dumps([elem])
-                
-                ##modify this to make it an if statement and observe change
-                try:
-                    conn.send(len(TDM_data_to_send).to_bytes(2,'big') + TDM_data_to_send) 
-                except:
-                    continue
         
-        '''
         raw_TDM_data = TDMProtocolAnalyzer.get_TDM_data()
         if raw_TDM_data != 'closed_session':
             for elem in raw_TDM_data:
@@ -63,8 +41,7 @@ def main(HOST, PORT):
             print('in closing state')
             TDMProtocolAnalyzer.empty_queue()
             closed_session_msg = pickle.dumps(raw_TDM_data)
-            for _ in range(10): #just to ensure the close connection message gets sent
-                conn.send(len(closed_session_msg).to_bytes(2,'big') + closed_session_msg)
+            conn.send(len(closed_session_msg).to_bytes(2,'big') + closed_session_msg)
             conn.close()
             print("closed the sending server connection")
             break
