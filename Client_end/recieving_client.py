@@ -22,14 +22,13 @@ def main(HOST):
 
                 try:
                     decoded_data = pickle.loads(data)
-                    print(decoded_data)
                     if decoded_data == "closed_session":
                         recieving_socket.close()
                         print("Closing Recieving Client connection")
                         break
                     
                     elif decoded_data == "No Serial Connection":
-                        print("ERROR: No Serial Connection! Check Connection of Raspberry Pi to Board!")
+                        raise Exception("ERROR: No Serial Connection! Check Connection of Raspberry Pi to Board!")
                         
                     else: 
                         GUI_queue.put(decoded_data)
@@ -37,11 +36,10 @@ def main(HOST):
                 except:
                     continue
             except:
-                print("ERROR: Recieving Client timed out! Please relaunch the GUI and the Raspberry Pi to reconnect!")
-                break
+                raise Exception("ERROR: Recieving Client timed out! Please relaunch the GUI and the Raspberry Pi to reconnect!")
 
     except:
-        print("ERROR: Receiving Client couldn't connect to the Raspberry Pi! Please try to relaunch the GUI and the Raspberry Pi to reconnect!")
+        raise Exception("ERROR: Receiving Client couldn't connect to the Raspberry Pi! Please try to relaunch the GUI and the Raspberry Pi to reconnect!")
 
 def get_data():
     return GUI_queue.get()

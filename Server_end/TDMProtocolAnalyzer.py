@@ -15,13 +15,10 @@ def TDM_Analyzer():
         
         #capture the host frames and the node frames
         this_host_frame, this_node_frames = decoder.capture_frames()
-        
-    
         counter = decoder.decoding_frame(this_host_frame, this_node_frames)
        
         for _ in range(counter):
             frame = [TDMDecoder.frame_queue.get()]
-            
             if global_vars.hide_status_get: #when we want to hide the status get commands, filter them out and dont put them on the queue
                 if not frame[0][3] == 'COMMAND_status_get':
                     TDM_data_queue.put(frame)

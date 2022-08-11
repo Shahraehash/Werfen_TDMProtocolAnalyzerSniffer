@@ -20,8 +20,8 @@ def main(HOST, PORT):
         data_list = conn.recv(recieving_byte_data).split(b'0xst')
 
         for data in data_list[-5:]:
-            if len(data) == 88:
-                decoded_data = data.decode('utf-8')
+            if len(data) == 84:
+                decoded_data = data.decode('utf-8')                
                 decode_recieving_server.socket_queue.put(json.loads(decoded_data))
             elif data == b'closed_socket':
                 global_vars.close_session = True

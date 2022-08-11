@@ -51,14 +51,14 @@ Node_Frame_Argument_Types = {"DEVICE_board": {'COMMAND_status_get': "", 'COMMAND
                   "DEVICE_rfid": {'COMMAND_rfidenable': "", 'COMMAND_rfidflags': "u", 'COMMAND_gettaglen': "u", 'COMMAND_gettagdata': "uuu", 'COMMAND_settagread': ""}}
 
 
-def decode_signed_int(arg):
+def decode_signed_int(arg): #d
     return str(int(arg, 16))
 
-def decode_unsigned_int(arg):
+def decode_unsigned_int(arg): #u
     binary_representation_arg = binascii.unhexlify(arg)
     return str(int.from_bytes(binary_representation_arg, byteorder= 'little'))
 
-def decode_IEEE_float(arg):
+def decode_IEEE_float(arg): #f
     value = ""
     for i in range(4):
         partition = arg[2*i,2*(i+1)]
@@ -66,7 +66,7 @@ def decode_IEEE_float(arg):
         value += str(struct.unpack('f', float_value)[0])
     return value
     
-def decode_4CC(arg):
+def decode_4CC(arg): #c
     value = ""
     for i in range(4):
         partition = arg[2*i:2*(i+1)]
@@ -75,7 +75,7 @@ def decode_4CC(arg):
     return value[::-1]
 
 
-def decode_hexadecimal(arg):
+def decode_hexadecimal(arg): #x
     return hex(arg)
 
 

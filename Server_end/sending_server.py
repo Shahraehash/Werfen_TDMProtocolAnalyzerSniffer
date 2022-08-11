@@ -40,6 +40,8 @@ def main(HOST, PORT):
         else:
             print('in closing state')
             TDMProtocolAnalyzer.empty_queue()
+            TDMCapturePackets.empty_queue()
+            TDMStreamingSerial.empty_queue()
             closed_session_msg = pickle.dumps(raw_TDM_data)
             conn.send(len(closed_session_msg).to_bytes(2,'big') + closed_session_msg)
             conn.close()

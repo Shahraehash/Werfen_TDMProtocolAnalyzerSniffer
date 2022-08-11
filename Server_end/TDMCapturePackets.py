@@ -24,3 +24,7 @@ def capture_packet():
 
 def get_packet():
     return packet_queue.get()
+
+def empty_queue():
+    with packet_queue.mutex:
+        packet_queue.queue.clear()

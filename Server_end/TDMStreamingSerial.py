@@ -3,8 +3,6 @@ import TDMProtocolAnalyzer
 
 serial_port_device='/dev/ttyS0'
 serial_baud_rate=921600
-#serial_timeout=0.000015 # slightly longer than the length of a 921600 byte
-#serial_timeout=0.00015
 idle_timeout=-1 # timeout in seconds before script gives up waiting for a host frame. -1 is infininte
 node_timeout=0.0001 #3 # typically about 260uS from end of host frame to start of first node frame per L4 Bus Protocol Spec
 number_of_L4s=None
@@ -29,10 +27,18 @@ def stream_serial():
         try:
             data = ser.read(length_of_read)
         except serial.SerialException as e:
-            TDMProtocolAnalyzer.TDM_data_queue.put("No Serial Connection")
-        serial_queue.put(data)
+            TDMProtocolAnalyzer.TDM_data_queue.put(["No Serial Connection"])
+        try:
+            serial_queue.put(data)
+        except UnboundLocalError:
+            TDMProtocolAnalyzer.TDM_data_queue.put(["No Serial Connection"])
+        
         
         
 
 def get_serial_data():
     return serial_queue.get()
+
+def empty_queue():
+    with serial_queue.mutex:
+        serial_queue.queue.clear()

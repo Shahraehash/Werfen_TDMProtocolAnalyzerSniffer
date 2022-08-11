@@ -38,7 +38,7 @@ def main(HOST, number_of_L4s):
             global_variables.sent_messages += 1
 
     except:
-        print("ERROR: Couldn't connect to Raspberry Pi! Please relaunch GUI and Raspbery Pi!")
+        raise Exception("ERROR: Couldn't connect to Raspberry Pi! Please relaunch GUI and Raspbery Pi!")
     
     
     

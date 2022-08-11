@@ -109,4 +109,21 @@ Within the GUI_for_TDMprotocolAnalyzer/Testing_Files/ there are some scripts tha
             - get_status(node)
             - get_ver(node)
 
+*************************************************************************************************************************************************************************************************************************************
+
+Sniffer Analysis Tools:
+
+Throughout the construction of the sniffer, some specific analysis were performed to determine the performance of the sniffer. In the Sniffer_Analysis_Tools there are two tools that have been developed to help the user to determine how well the sniffer is truly performing. 
+
+- Comparing Serial Packets
+    In the comparing-serial-packets-from-sniffers folder there is a tool used to analyze how well this TDMprotocolAnalyzer sniffer performs compared to the Saleae Sniffer. Although the scripts used for this comparison are written and placed in this folder, the data currently found in these txt files are during development of Version 3 of the Sniffer where some packets were not sniffed by the TDMprotocolAnalyzer sniffer. 
+        - To run this tool, generate txt files of the serial raw byte code read by both the TDMprotocolAnalyzer sniffer and the Saleae sniffer
+        - Within the comparing-serial-packets-from-sniffers folder run:
+            - "python3 compare_txtfiles.py -v [version of firmware] -f1 [path of TDMprotocolAnalyzer sniffer txt file] -f2 [path of Saleae sniffer txt file] -o [path of output csv file]"
+            - example: "python3 compare_txtfiles.py -v p1a -f1 raspberrypi_txtfiles/P1A_Rasp_Pi_raw_TDM_data.txt -f2 sniffer_txtfiles/P1A_Sniffer_hex_bytes.txt -o comparison_csv_files/P1A_Sniffer_Rasp_Pi.csv"
+
+- Track CPU usage
+    One of the concerns along the process was how much CPU usage the Raspberry Pi TDMprotocolAnalyzer sniffer uses since a high CPU usage will slow down the sniffer's ability to send packets to the PC. Therefore to determine the amount of CPU used by the sniffer, a tool was developed to compute how much CPU the sniffer used when running a certain amount of cycles (set to 100 currently) to generate a plot to determine if improvements were made when changing the method for sniffing. 
+        - To run this tool, while the TDMprotocolAnalyzer sniffer is running in the background, run "python3 Server_end/Track_CPU_usage/CPUusage_tracker.py -o [path of output file]" which will generate the .csv file of the output. 
+        - To then visually compare the csv files, run "python3 Sniffer_Analysis_Tools/CPU_usage_Analysis/plot_CPU_usage.py -f1 [path for one of the csv files (ideally the one you expect to have a higher CPU usage)] -f2 [path for the other csv file] -t [title you want for the figure generated and the name of the image]" 
 

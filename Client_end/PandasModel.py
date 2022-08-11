@@ -21,7 +21,7 @@ class PandasModel(QtCore.QAbstractTableModel):
                 return str(self._data.iloc[index.row(), index.column()])
             
             if role == QtCore.Qt.BackgroundRole:
-                source_frame = str(self._data.Source.values.tolist()[index.row()][:3])
+                source_frame = str(self._data.Source.values.tolist()[index.row()][:4])
                 if source_frame == 'Host':
                     return QtGui.QColor('lightblue')
                 elif source_frame == 'Node':

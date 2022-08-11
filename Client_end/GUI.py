@@ -166,10 +166,9 @@ class MainWindow(QMainWindow):
         while not data_on_queue_for_GUI.empty():
             data = self.data
             TDM_data = data_on_queue_for_GUI.get()
-            if TDM_data not in ["empty string", "No Serial Connection", "closed session"]:
+            if TDM_data[0] not in ["empty string", "No Serial Connection", "closed session"]:
 
                 #check if we have a status from our recieving end
-                #print(TDM_data)
                 if TDM_data[0][-2] != '--':
                     self.completed_execution = True
             

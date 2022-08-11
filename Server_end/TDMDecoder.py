@@ -32,7 +32,10 @@ class TDMDecoder:
         
         #isolate the host frame
         for host_idx in range(self.host_frame_length):
-            self.host_frame.append(packet[host_idx]) 
+            if host_idx < len(packet):
+                self.host_frame.append(packet[host_idx])
+            else: 
+                self.host_frame.append(0)
         
         #isolate the node frames by node
         for node in range(self.number_of_L4s):
@@ -56,8 +59,8 @@ class TDMDecoder:
         counter = 0
         for node in range(self.number_of_L4s):
             host_output_list = ["Host Frame"]
-            decoded_host_frame, deviceID, commandsent = self.decode_host_frame_for_node(node, host_frame, host_frame[(15*node)+4:(15*(node+1))+4], host_output_list)
-            decoded_corresponding_node_frame = self.decode_node_frame(node_frames[node], deviceID, commandsent)
+            decoded_host_frame, deviceID, commandsent = self.decode_host_frame_for_node(host_frame, host_frame[(15*node)+4:(15*(node+1))+4], host_output_list)
+            decoded_corresponding_node_frame = self.decode_node_frame(node, node_frames[node], deviceID, commandsent)
            
             if decoded_corresponding_node_frame != None:
                 
@@ -89,7 +92,6 @@ class TDMDecoder:
             cmd_decoded = str(L4_COMMAND_CODES(host_frame_for_node[2]).name)
         decoded_host_frame.append(cmd_decoded)
             
-            
         #Status
         decoded_host_frame.append("--")
         
@@ -103,8 +105,7 @@ class TDMDecoder:
                 this_arg = this_arg + ((host_frame_for_node[4*arg+idx+3]) << (idx *8))
             arguments_decoded += "".join([args, f"{this_arg:08X} "])
             decoded_host_frame.append(arguments_decoded)
-      
-                
+            
         #Byte Code
         byte_code_list = []
         for elem in host_frame:
@@ -136,7 +137,6 @@ class TDMDecoder:
             status_string = str(L4_STATUS_CODES(node_frame[3]).name)
         decoded_node_frame.append(status_string)
         
-        
         #Data
         for data in range(self.number_of_data):
             data_decoded = ""
@@ -148,7 +148,6 @@ class TDMDecoder:
             data_decoded = "".join([data_str, f"{this_data:08X} "])
             decoded_node_frame.append(data_decoded)
         
-
         #Byte Code
         byte_code_list = []
         for elem in node_frame:
